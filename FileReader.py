@@ -22,6 +22,11 @@ class File_Reader():
         self.int_file = int_file
         self.pho_file = pho_file
         
+        self.tie = self.read_tie()
+        self.ext = self.read_ext()
+        self.int = self.read_int()
+        self.pho = self.read_pho()
+        
     def read_tie(self):
         """
         Desc:
@@ -34,7 +39,8 @@ class File_Reader():
         df = pd.read_csv(self.tie_file, sep = "\t", header = None)
         df.columns = ["point_id", "X", "Y", "Z"] 
         df = df.set_index("point_id")
-
+        
+        
         return df
 
     def read_ext(self):
