@@ -42,6 +42,9 @@ class File_Reader():
         
         
         return df
+    
+    def read_con(self):
+        
 
     def read_ext(self):
         """
