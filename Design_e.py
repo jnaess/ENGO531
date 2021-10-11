@@ -97,9 +97,9 @@ class Design_e(Bundle):
             Values connected to Bundle?
                 no, just inside () here stuff
             """
-            self.xp = iop["xp"].to_list()[0]
-            self.yp = iop["yp"].to_list()[0]
-            self.c = iop["c"].to_list()[0]
+            self.xp = 3.45e-3*iop["xp"].to_list()[0]
+            self.yp = 3.45e-3*iop["yp"].to_list()[0]
+            self.c = 3.45e-3*iop["c"].to_list()[0]
             #print("self.xp "+ str(self.xp))
             #print("self.yp "+ str(self.yp))
             #print("self.c "+ str(self.c))
@@ -167,3 +167,4 @@ class Design_e(Bundle):
                                                       +(self.Z_i - self.Z_cj)*(w*m.cos(self.w)*m.cos(self.o)*m.sin(self.k)+v*m.cos(self.w)*m.sin(self.o)))
                 #k
             self.A[i+1,j + 5] = -self.c*u/w
+            

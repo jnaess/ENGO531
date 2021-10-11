@@ -35,6 +35,9 @@ class Bundle(LS, File_Reader):
             self.n
         """
         #pixel spacing (mm)
+        self.pix_to_m = 3.45e-3
+        
+        #pixel spacing (mm)
         self.delta_x = self.delta_y = 3.45e-6*1000
 
         #normal principal distance (mm) 
@@ -104,6 +107,9 @@ class Bundle(LS, File_Reader):
             self.x_ij
             self.y_ij
         """
+        #self.x_ij = (n_ij-((self.Np/2)-.5))*self.delta_x
+        #self.y_ij = (((self.Mp/2)-.5)-m_ij)*self.delta_y
+        
         self.x_ij = (n_ij-((self.Np/2)-.5))*self.delta_x
         self.y_ij = (((self.Mp/2)-.5)-m_ij)*self.delta_y
     

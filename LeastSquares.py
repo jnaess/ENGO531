@@ -27,7 +27,7 @@ class LS(Tools):
         
         self.debugging = debugging
         self.file_name = file_name
-        self.read_2D()
+        #self.read_2D()
 
     def read_2D(self):
         """

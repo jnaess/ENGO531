@@ -46,7 +46,7 @@ class Network(LS, PostAdjustmentTester):
            self.u
         """
                               
-        self.u = self.models[0].u
+        self.u = self.models[0].ue + self.models[0].uo
         
         #set up observation matrix
         temp = []
@@ -183,7 +183,7 @@ class Network(LS, PostAdjustmentTester):
         self.S_hat = mat(np.zeros((self.n, 1)))
         self.x_hat = mat(np.zeros((self.n, 1)))
         
-        while self.not_met:
+        while self.not_met and i < 5:
             i = i + 1
             #print("LSA iteration: " + str(i))
             #print("x_0: ")
@@ -202,11 +202,11 @@ class Network(LS, PostAdjustmentTester):
             self.set_N()
             self.set_U()
             
-            self.S_hat = -mm(inv(self.N),self.U)
-            break
             #S_hat
+            self.S_hat = -mm(inv(self.N),self.U)
             
-            self.S_hat = -mm(inv(mm(t(self.A),mm(self.P,self.A))),mm(t(self.A),mm(self.P,self.w_0)))
+            
+            
 
             #print("l_0: ")
             #print(self.l_0)
@@ -214,7 +214,6 @@ class Network(LS, PostAdjustmentTester):
             #x_hat
             self.x_hat = LS.x_0 + self.S_hat
            
-                
             #update x_0
             LS.x_0 = self.x_hat
           
@@ -232,7 +231,7 @@ class Network(LS, PostAdjustmentTester):
             
             self.convergence(i)
         
-        #print("LSA passed in: " + str(i) + " iterations")
+        print("LSA passed in: " + str(i) + " iterations")
         #self.final_matrices()
     
     def error_ellipses(self):
