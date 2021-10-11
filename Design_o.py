@@ -32,7 +32,7 @@ class Design_o(Bundle):
         Desc:
            uses self.pho to take the x and y and set up the observations and converts them to RHC with a bundle functions
            
-           also sets errs
+           sets control point to .01mm and current tie points to 10mm
         Input:
             self.pho
         Output:
@@ -41,7 +41,7 @@ class Design_o(Bundle):
         """
         self.obs = mat(np.zeros((self.n, 1)))
         
-        #data input as ***meters***
+        #data input as ***mm***
         self.errs = mat(np.zeros((self.n, 1)))
         
         #get desired numbers in a list
@@ -63,24 +63,41 @@ class Design_o(Bundle):
             #assign errors
             if check[j] == "u":
                 #then tie point and larger std
+                self.errs[i,0] = 10
+                self.errs[i+1,0] = 10
+            else:
                 self.errs[i,0] = .01
                 self.errs[i+1,0] = .01
-            else:
-                self.errs[i,0] = .0001
-                self.errs[i+1,0] = .0001
             
             #increment index in y and x lsits
             j = j+1
             
-    def set_errors(self):
+    def set_X_0(self):
         """
         Desc:
-            sets control point to .01mm and current tie points to 10mm
+            Sets up X_0 from the dataframe values
         Input:
         Output:
-            self.errs
+            
         """
-        self.errs = mat(self.df[self.d_error]).transpose()
+        #assumes images already sorted in ascending order
+        #assumes camera also sorted
+        x_0_ae = []
+        for index, row in self.ext.iterrows():
+            x_0_ae.append(row["Xc"])
+            x_0_ae.append(row["Yc"])
+            x_0_ae.append(row["Zc"])
+            x_0_ae.append(m.radians(row["w"]))
+            x_0_ae.append(m.radians(row["o"]))
+            x_0_ae.append(m.radians(row["k"]))
+        
+        x_0_ao = []
+        for index, row in self.obj.iterrows():
+            x_0_ao.append(row["X"])
+            x_0_ao.append(row["Y"])
+            x_0_ao.append(row["Z"])
+            
+        self.x_0 = t(mat(x_0_ae+x_0_ao))
         
     def set_design(self):
         """
