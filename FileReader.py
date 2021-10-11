@@ -139,7 +139,10 @@ class File_Reader():
         #convert ID's to strings
         df[["camera_id"]] = df[["camera_id"]].astype(str)
 
+        #secure flaot type numbers
         df[["c"]] = df[["c"]].astype(float)
+        df[["xp"]] = df[["xp"]].astype(float)
+        df[["yp"]] = df[["yp"]].astype(float)
         
         return df
 

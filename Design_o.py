@@ -99,6 +99,57 @@ class Design_o(Bundle):
             
         self.x_0 = t(mat(x_0_ae+x_0_ao))
         
+    def obs_0(self):
+        """
+        desc:
+            Sets up self.l_0 (extimated observations)
+            Used for finding the current misclosure
+            Assumes only one camera for IOP's from self.int
+        input:
+            self.x_0
+        output:
+            self.l_0
+        """
+        self.xp = self.int["xp"][0]
+        self.yp = self.int["yp"][0]
+        self.c = self.int["c"][0]
+        
+        #set it up as just zeros
+        self.l_0 = mat(np.zeros((self.n, 1)))
+        
+        for i in range(0, self.n, 2):
+            obs = self.pho.iloc[int(i/2)]
+            
+            #row for ae parameters
+            j = self.Ae.find_col_ae(obs["image_id"])
+            #row for ue parameters
+            j_2 = self.ue + self.find_col_ao(obs["point_id"])
+            
+            self.X_cj = self.x_0[j]
+            self.Y_cj = self.x_0[j+1]
+            self.Z_cj = self.x_0[j+2]
+            self.w = self.x_0[j+3]
+            self.o = self.x_0[j+4]
+            self.k = self.x_0[j+5]
+
+            #xp, yp, c values should be updated here if multiple cameras were used
+            
+            self.X_i = self.x_0[j_2]
+            self.Y_i = self.x_0[j_2+1]
+            self.Z_i = self.x_0[j_2+2]
+
+            v = self.V()
+            w = self.W()
+            u = self.U()
+            m_temp = self.M()
+            
+            #setup xij
+            self.l_0[i,0] = self.xp-self.c*u/w
+            
+            #set up yij
+            self.l_0[i+1,0] = self.yp - self.c*v/w
+        
+        
     def set_design(self):
         """
         Desc:
