@@ -33,7 +33,7 @@ class Network(LS, PostAdjustmentTester):
         self.initialize_variables()
         
         #_________________begin LSA______________________
-        self.nonlinear_LSA()
+        self.photo_LSA()
         
         
     def initialize_variables(self):
@@ -136,6 +136,73 @@ class Network(LS, PostAdjustmentTester):
             
             self.w_0 =  self.l_0 - self.obs
 
+            #S_hat
+            
+            self.S_hat = -mm(inv(mm(t(self.A),mm(self.P,self.A))),mm(t(self.A),mm(self.P,self.w_0)))
+
+            #print("l_0: ")
+            #print(self.l_0)
+            
+            #x_hat
+            self.x_hat = LS.x_0 + self.S_hat
+           
+                
+            #update x_0
+            LS.x_0 = self.x_hat
+          
+            #print("S_hat:")
+            #print(self.S_hat)
+            #print("x_hat: ")
+            #print(self.x_hat)
+            #print("A: ")
+            #print(self.A)
+            
+            
+            
+            
+            
+            
+            self.convergence(i)
+        
+        #print("LSA passed in: " + str(i) + " iterations")
+        #self.final_matrices()
+        
+    def photo_LSA(self):
+        """
+        Desc:
+            Iterates a nonlinear LSA, checking whether criterea was met. Once it was met then it constructs the final matrices for analysis
+        Input:
+        Output:
+        
+        """
+        self.not_met = True
+        
+        i = 0
+        
+        self.w_0 = mat(np.zeros((self.n, 1)))
+        self.S_hat = mat(np.zeros((self.n, 1)))
+        self.x_hat = mat(np.zeros((self.n, 1)))
+        
+        while self.not_met:
+            i = i + 1
+            #print("LSA iteration: " + str(i))
+            #print("x_0: ")
+            #print(LS.x_0)
+            
+            #l_0
+            self.obs_0()
+            
+            #update l_0 and A
+            self.update_values()
+
+            #misclosure
+            
+            self.w_0 =  self.l_0 - self.obs
+            
+            self.set_N()
+            self.set_U()
+            
+            self.S_hat = -mm(inv(self.N),self.U)
             break
             #S_hat
             
@@ -265,12 +332,57 @@ class Network(LS, PostAdjustmentTester):
         Output:
            self.A
         """
-        self.A = mat(np.zeros((self.n, self.u)))
+        #self.A = mat(np.zeros((self.n, self.u)))
                     
-        temp = []
-        for model in self.models:
-            temp.append(model.A)
-        self.A = np.vstack(temp)
+        #temp = []
+        #for model in self.models:
+        #    temp.append(model.A)
+        #self.A = np.vstack(temp)
+        self.Ae = self.models[0].Ae.A
+        self.Ao = self.models[0].A
+        
+    def set_N(self):
+        """
+        Desc:
+            Sets up the N matrix with the four quadrants
+        Input:
+            self.Ae
+            self.Ao
+            self.P
+        Output:
+            self.Nee
+            self.Neo
+            self.Noo
+            self.N
+        """
+        self.Nee = mm(t(self.Ae),mm(self.P,self.Ae))
+        self.Neo = mm(t(self.Ae),mm(self.P,self.Ao))
+        self.Noo = mm(t(self.Ao),mm(self.P,self.Ao))
+        
+        a = np.concatenate((self.Nee,self.Neo), axis = 1)
+        b = np.concatenate((t(self.Neo),self.Noo), axis = 1)
+        
+        self.N = np.concatenate((a,b), axis = 0)
+        
+    def set_U(self):
+        """
+        Desc:
+            Sets up the U matrix with the two halves
+        Input:
+            self.Ae
+            self.Ao
+            self.P
+            self.w_0
+        Output:
+            self.Ue
+            self.Uo
+            self.U
+        """
+        self.Ue = mm(t(self.Ae),mm(self.P,self.w_0))
+        self.Uo = mm(t(self.Ao),mm(self.P,self.w_0))
+        
+        self.U = np.concatenate((self.Ue,self.Uo), axis = 0)
+               
         
     def n_mat(self):
         """

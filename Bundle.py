@@ -34,11 +34,11 @@ class Bundle(LS, File_Reader):
             self.uo
             self.n
         """
-        #pixel spacing
+        #pixel spacing (mm)
         self.delta_x = self.delta_y = 3.45e-6*1000
 
-        #normal principal distance mm divided by meters
-        self.n_p_d = 7#/1000
+        #normal principal distance (mm) 
+        self.n_p_d = 7
 
         #number of pixels for total columns
         self.Np = 4000
