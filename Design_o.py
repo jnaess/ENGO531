@@ -149,11 +149,15 @@ class Design_o(Bundle):
             u = self.U()
             m_temp = self.M()
             
+            x = self.xp-self.c*u/w
+            y = self.yp - self.c*v/w
+            self.rhc(x,y)
+            
             #setup xij
-            self.l_0[i,0] = self.xp-self.c*u/w
+            self.l_0[i,0] = self.x_ij
             
             #set up yij
-            self.l_0[i+1,0] = self.yp - self.c*v/w
+            self.l_0[i+1,0] = self.y_ij
         
         
     def set_design(self):

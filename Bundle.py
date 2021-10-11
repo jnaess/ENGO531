@@ -35,10 +35,10 @@ class Bundle(LS, File_Reader):
             self.n
         """
         #pixel spacing
-        self.delta_x = self.delta_y = 3.45e-6
+        self.delta_x = self.delta_y = 3.45e-6*1000
 
         #normal principal distance mm divided by meters
-        self.n_p_d = 7/1000
+        self.n_p_d = 7#/1000
 
         #number of pixels for total columns
         self.Np = 4000
@@ -105,7 +105,7 @@ class Bundle(LS, File_Reader):
             self.y_ij
         """
         self.x_ij = (n_ij-((self.Np/2)-.5))*self.delta_x
-        self.y_ij = (((self.Mp/2)-.5)-m_ij)*self.delta_x
+        self.y_ij = (((self.Mp/2)-.5)-m_ij)*self.delta_y
     
     def M(self):
         """

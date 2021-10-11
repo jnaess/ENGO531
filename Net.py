@@ -33,7 +33,7 @@ class Network(LS, PostAdjustmentTester):
         self.initialize_variables()
         
         #_________________begin LSA______________________
-        #self.nonlinear_LSA()
+        self.nonlinear_LSA()
         
         
     def initialize_variables(self):
@@ -70,7 +70,7 @@ class Network(LS, PostAdjustmentTester):
         self.covariance()
         
         #set up apriori
-        self.apriori = m.radians(1.5/3600)
+        self.apriori = 1
         
         #set up weight matrix
         self.P = self.apriori**2 * inv(self.Cl)
@@ -136,6 +136,7 @@ class Network(LS, PostAdjustmentTester):
             
             self.w_0 =  self.l_0 - self.obs
 
+            break
             #S_hat
             
             self.S_hat = -mm(inv(mm(t(self.A),mm(self.P,self.A))),mm(t(self.A),mm(self.P,self.w_0)))
@@ -165,7 +166,7 @@ class Network(LS, PostAdjustmentTester):
             self.convergence(i)
         
         #print("LSA passed in: " + str(i) + " iterations")
-        self.final_matrices()
+        #self.final_matrices()
     
     def error_ellipses(self):
         """
