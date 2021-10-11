@@ -147,7 +147,9 @@ class File_Reader():
         """
         Desc:
             Reads in the pho (observation) points as returns dataframe of the values
+            Must have self.tie initialized
         In:
+            self.tie
             filename, default set to lab1 filename
         Out:
             dataframe with columns "point_id", "image_id", "x", "y" and index set to natural incrementation
@@ -168,8 +170,15 @@ class File_Reader():
         #sort values in ascending inage_id's
         df = df.sort_values(by=['image_id'])
         
-        
-        #std for control points is .01mm
+        #std for control points is .01mm and temporarily 10mm for tie
+        temp = []
+        for index, row in df.iterrows():
+           # print(row['point_id'])
+            if any(self.tie["point_id"] == row['point_id']):
+                temp.append("u")
+            else:
+                temp.append('n')
+        df["knowns"] = temp
         
         return df
     

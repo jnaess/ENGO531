@@ -30,17 +30,24 @@ class Design_o(Bundle):
     def set_obs(self):
         """
         Desc:
-           uses self.pho to take the x and y and set up the observations
+           uses self.pho to take the x and y and set up the observations and converts them to RHC with a bundle functions
+           
+           also sets errs
         Input:
+            self.pho
         Output:
-            self.obs: l matrix (never changes)
-            
+            self.obs: l matrix (never changes)   
+            self.errs
         """
         self.obs = mat(np.zeros((self.n, 1)))
+        
+        #data input as ***meters***
+        self.errs = mat(np.zeros((self.n, 1)))
         
         #get desired numbers in a list
         y = self.pho['y'].to_list()
         x = self.pho['x'].to_list()
+        check = self.pho['knowns'].to_list()
         
         j = 0
         for i in range(0, self.n, 2):
@@ -53,9 +60,27 @@ class Design_o(Bundle):
             #y pixel
             self.obs[i+1,0] = self.y_ij
             
+            #assign errors
+            if check[j] == "u":
+                #then tie point and larger std
+                self.errs[i,0] = .01
+                self.errs[i+1,0] = .01
+            else:
+                self.errs[i,0] = .0001
+                self.errs[i+1,0] = .0001
+            
             #increment index in y and x lsits
             j = j+1
             
+    def set_errors(self):
+        """
+        Desc:
+            sets control point to .01mm and current tie points to 10mm
+        Input:
+        Output:
+            self.errs
+        """
+        self.errs = mat(self.df[self.d_error]).transpose()
         
     def set_design(self):
         """
