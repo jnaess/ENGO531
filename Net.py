@@ -33,7 +33,7 @@ class Network(LS, PostAdjustmentTester):
         self.initialize_variables()
         
         #_________________begin LSA______________________
-        self.nonlinear_LSA()
+        #self.nonlinear_LSA()
         
         
     def initialize_variables(self):

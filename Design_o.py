@@ -26,6 +26,12 @@ class Design_o(Bundle):
         self.set_col_list_ao()
         
         self.set_design()
+        
+        self.set_obs()
+        
+        self.set_X_0()
+        
+        self.obs_0()
                 
     def set_obs(self):
         """
