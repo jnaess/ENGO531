@@ -57,12 +57,14 @@ class File_Reader():
         #convert ID's to strings
         df[["point_id"]] = df[["point_id"]].astype(str)
         
+        #std for tie points is 1 pixel
+        
         return df
     
     def read_con(self):
         """
         Desc:
-            Reads in the tie points as returns dataframe of the values
+            Reads in the control points as returns dataframe of the values
         In:
             filename, default set to lab1 filename
         Out:
@@ -165,6 +167,9 @@ class File_Reader():
         
         #sort values in ascending inage_id's
         df = df.sort_values(by=['image_id'])
+        
+        
+        #std for control points is .01mm
         
         return df
     

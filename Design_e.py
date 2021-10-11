@@ -39,7 +39,6 @@ class Design_e(Bundle):
         #1, 3, 5, etc. are Y pixels
         #__print("n: "+str(self.n))
         for i in range(0, self.n, 2):
-            print(str(i/2)+"___________________________________________")
             #increments every two because one row is for X, one row is for Y
             
             #print(i)
@@ -134,7 +133,6 @@ class Design_e(Bundle):
             #print("w " +str(w))
             #print("u "+str(u))
             #print("m_temp"+str(m_temp))
-            print("___________________________________________")
 
                 #then evens (X partial)
                 #X

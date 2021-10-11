@@ -147,7 +147,41 @@ class LS(Tools):
             else:
                 index = index + 1
         
-        #debugging stuff
-        if self.debugging:
-            print(point_name + " Could not be found")
-        return -1
+    
+    def set_col_list_ao(self):
+        """
+        Desc:
+            
+            Initializes the order of point_id's for the Ao matrix so that numbers are positioned correctly from all points observed (unique values for columns)
+        Input:
+        Output:
+            self.u_list_ao for Ao
+        """
+        #assumes images already sorted in ascending order
+        self.u_list_ao = self.obj['point_id'].unique()
+        
+    def find_col_ao(self, point_id, li = "u"):
+        """
+        Desc:
+            returns the column index of the desired points
+            expects 'n' for known and 'u' for unknown
+            **all values must be in caps**
+        Input:
+            u_list_ao, list of strings of "pointname_dimension"
+            point_id: string of the image id index to return
+        Output:
+            integer value of the column to place the value in the desired design matrix multiplied by 3 for XYZ   
+        """
+        
+        if li == "u" :
+            li = self.u_list_ao
+        else:
+            li = self.datums
+            
+        index = 0
+        for key in li:
+            if point_id == key:
+                return index*3
+            else:
+                index = index + 1
+        

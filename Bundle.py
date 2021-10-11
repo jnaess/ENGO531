@@ -73,8 +73,8 @@ class Bundle(LS, File_Reader):
         Output:
             self.uo
         """
-        #possibly add control stuff
-        q = len(self.tie.index)
+        #control stuff added
+        q = len(self.obj.index)
         
         self.uo = 3 * q
         
@@ -192,22 +192,6 @@ class Bundle(LS, File_Reader):
         """
         W = self.M()[2,0]*(self.X_i-self.X_cj)+self.M()[2,1]*(self.Y_i-self.Y_cj)+self.M()[2,2]*(self.Z_i-self.Z_cj)
         
-        print("self.w "+ str(self.w))
-        print("self.o "+ str(self.o))
-        print("self.k "+ str(self.k))
-        print("self.X_cj "+ str(self.X_cj))
-        print("self.Y_cj "+ str(self.Y_cj))
-        print("self.Z_cj "+ str(self.Z_cj))
-        print("self.xp "+ str(self.xp))
-        print("self.yp "+ str(self.yp))
-        print("self.c "+ str(self.c))
-        print("self.X_i "+ str(self.X_i))
-        print("self.Y "+ str(self.Y_i))
-        print("self.Z "+ str(self.Z_i))
-        print("v "+str(self.V()))
-        print("w " +str(W))
-        print("u "+str(self.U()))
-        print("_____________________________")
         return W
 
     def V(self):
