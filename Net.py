@@ -8,43 +8,38 @@ import numpy as np
 import pandas as pd
 from LeastSquares import LS
 from Level import Delta
+from PostAdjustmentTester import PostAdjustmentTester
 
 
-class Network(LS):
+
+
+class Network(LS, PostAdjustmentTester):
     """
     Build to run the least squares adjustment and set up the overall network
     """
-    def __init__(self, models = [Delta()]):
+    def __init__(self, models):
         """
         Desc:
         Input:
             models: list of models that have been initialized with 
-                data. Must contain the save number of columns in their a 
+                data. Must contain the same number of columns in their a 
                 matrix (predefined by LS())
         Output:
         """
         LS.__init__(self)
+        PostAdjustmentTester.__init__(self)
         self.models = models
+        
         self.initialize_variables()
+        
+        #_________________begin LSA______________________
+        self.nonlinear_LSA()
         
         
     def initialize_variables(self):
         """
         Desc:
-            initializes major variables (combining matrices and stuff)
-            
-                    [E,N,H]
-        ASCM2      -9393.784, 5660608.432, 1110.234
-        ASCM1: -9904.726, 5659098.669, 1100.076 [-9903.780, 5659098.252, 1099.627]
-        SA10: -9292.095, 5660358.617, 1136.040
-        UCAL: -9378.481, 5660425.221, 1135.642
-        BASE: -9245.156, 5660419.921, 1111.683
-        C1: -9484.624, 5660402.217, 1111.207
-        C2: -9492.719, 5660518.107, 1112.521
-        C3: -9428.997, 5660514.752, 1114.125
-        N: E, N, 1135.959
-        S: E, N, 1135.887
-        
+            initializes major variables (combining matrices and stuff)        
         
         Input:
         Output:
@@ -75,42 +70,178 @@ class Network(LS):
         self.covariance()
         
         #set up apriori
-        self.apriori = 1
+        self.apriori = m.radians(1.5/3600)
         
         #set up weight matrix
-        self.P = inv(self.Cl)
+        self.P = self.apriori**2 * inv(self.Cl)
         
-        #l_0
-        self.obs_0()
+                
+    def final_matrices(self):
+        """
+        Desc:
+            Once the LSA is completed then this generates all desired matrices for analysis
+        Input:
+        Output:
+            self.r_hat: residuals
+            self.l_hat: adjusted observations
+            self.a_post: a-posteriori variance factor
+            self.uvf: unit variance factor
+            self.Cx (also Cs): 
+            self.Cl:
+            self.Cr:
+        """
+        self.r_hat = mm(self.A,self.S_hat) + self.w_0
+        self.l_hat = self.obs + self.r_hat
+        self.a_post = m.sqrt(mm(t(self.r_hat),mm(self.P,self.r_hat)/(self.n-self.u))[0,0])
+        self.uvf = self.a_post**2 / self.apriori**2
+        
+        self.Cx = self.a_post**2 * inv(mm(t(self.A),mm(self.P,self.A)))
+        self.plot_mat(self.Cx, "Covariance Matrix of Unknowns")
+        
+        self.Cl = mm(self.A,mm(self.Cx,t(self.A)))
+        self.plot_mat(self.Cl, "Covariance Matrix of Measurements")
+        
+        self.Cr = self.a_post**2*inv(self.P)-self.Cl
+        self.plot_mat(self.Cr, "Covariance Matrix of Residuals")
+        
+    def nonlinear_LSA(self):
+        """
+        Desc:
+            Iterates a nonlinear LSA, checking whether criterea was met. Once it was met then it constructs the final matrices for analysis
+        Input:
+        Output:
+        
+        """
+        self.not_met = True
+        
+        i = 0
+        
+        self.w_0 = mat(np.zeros((self.n, 1)))
+        self.S_hat = mat(np.zeros((self.n, 1)))
+        self.x_hat = mat(np.zeros((self.n, 1)))
+        
+        while self.not_met:
+            i = i + 1
+            #print("LSA iteration: " + str(i))
+            #print("x_0: ")
+            #print(LS.x_0)
+            
+            #l_0
+            self.obs_0()
+            
+            #update l_0 and A
+            self.update_values()
 
-        #set up N matrix
-        
-        self.n_mat()
-        
-        self.misc =  self.l_0 - self.obs
-        
-        self.u = mm(t(self.A),mm(self.P,self.misc))
+            #misclosure
+            
+            self.w_0 =  self.l_0 - self.obs
 
-        self.S_hat = -mm(inv(self.N),self.u)
+            #S_hat
+            
+            self.S_hat = -mm(inv(mm(t(self.A),mm(self.P,self.A))),mm(t(self.A),mm(self.P,self.w_0)))
+
+            #print("l_0: ")
+            #print(self.l_0)
+            
+            #x_hat
+            self.x_hat = LS.x_0 + self.S_hat
+           
+                
+            #update x_0
+            LS.x_0 = self.x_hat
+          
+            #print("S_hat:")
+            #print(self.S_hat)
+            #print("x_hat: ")
+            #print(self.x_hat)
+            #print("A: ")
+            #print(self.A)
+            
+            
+            
+            
+            
+            
+            self.convergence(i)
         
-        self.x_hat = self.x_0 + self.S_hat
+        #print("LSA passed in: " + str(i) + " iterations")
+        self.final_matrices()
+    
+    def error_ellipses(self):
+        """
+        Desc:
+            generates the error ellipses, minor, major, bearing_major
+            **must already have self.Cx generates**
+            **assumes Xa, Ya, Xb, Yb, Xc, Yc etc in the Cx diagonal**
+        Input:
+        Output:
+        """
+        self.u
+        ellipses = []
+        for i in range(0,self.Cx.shape[0],2):
+            q11 = self.Cx[i,i]
+            q12 = self.Cx[i,i+1]
+            q21 = self.Cx[i+1,i]
+            q22 = self.Cx[i+1,i+1]
+            ellipses.append(self.ellipse(q11, q12, q21, q22))
+            
+        return ellipses
+            
+    def ellipse(self, q11, q12, q21, q22):
+        """
+        Desc:
+            Calculates the error ellipse, returns back a dataframe of the values
+        Input:
+            q11, 
+            q12, 
+            q21, 
+            q22
+        Output:
+            {
+            "minor": float,
+            "major": float,
+            "major_orientation": radians
+            }
+        """
+        minor = m.sqrt(abs((q11 + q22 - m.sqrt((q11-q22)**2+4*(q12**2)))/2))
+        major = m.sqrt(abs((q11 + q22 + m.sqrt((q11-q22)**2+4*(q12**2)))/2))
         
-        self.v_hat = mm(self.A,self.S_hat) + self.misc 
+        major_orientation = m.atan(q12/(major**2-q22))
         
-        self.a_pri_hat = mm(t(self.v_hat),mm(self.P,self.v_hat))[0,0]/(self.n - len(self.x_0))
+        return {
+            "minor": minor,
+            "major": major,
+            "major_orientation": major_orientation
+            }
         
-        self.cx_hat = self.a_pri_hat*inv(self.N)
         
+            
         
+    def convergence(self,i):
+        """
+        Desc:
+            Checks based on this criterea, if convergence is met then sets self.not_met to False
+        Input:
+            i: number of iterations (for simple # of ter break)
+        Output:
+            self.not_met --> False if the criterea is met
+        """
+        #max 10 iterations
+        if i > 3:
+            self.not_met = False
+            
+        #minimum self.S_hat to be under .001m
         
-        #set up first Cx
-        #self.cx_mat()
+        not_under = False
+        for key in self.S_hat:
+            if abs(key[0,0]) > .0001:
+                #this means the criterea was not met for atleast one of the unknowns
+                not_under = True
+
+        if not not_under:
+            #then all things were under .0001m in change and therefore the criterea was met
+            self.not_met = False
         
-        #set up first misclosure
-        #self.w_mat()
-        
-        #correction vector
-        #self.correction()
         
     def covariance(self):
         """
@@ -123,7 +254,7 @@ class Network(LS):
         self.Cl = mat(np.zeros((self.n, self.n)))
         
         for i in range(0,self.n):
-            self.Cl[i,i] = self.errs[i]*self.errs[i]
+            self.Cl[i,i] = self.errs[i]**2
             
     def design(self):
         """
@@ -134,16 +265,11 @@ class Network(LS):
            self.A
         """
         self.A = mat(np.zeros((self.n, self.u)))
-        
+                    
         temp = []
-        for obs in self.models:
-            temp.append(obs.A)
+        for model in self.models:
+            temp.append(model.A)
         self.A = np.vstack(temp)
-        
-        
-        
-        #___________needs updating to merge all matrices______
-        #self.A = self.models[0].A
         
     def n_mat(self):
         """
@@ -160,9 +286,7 @@ class Network(LS):
 
         """
         #adds constants and unknowns together and solves for values
-        #temp = np.vstack((self.c, self.x_0))
-        #self.w = mm(self.A,temp) - self.obs
-        self.w = mm(self.A,self.x_0) - self.obs
+        self.w = mm(self.A,LS.x_0) - self.obs
            
            #____________for non linear this will need to change______
     def u_mat(self):
@@ -177,14 +301,38 @@ class Network(LS):
         
     def obs_0(self):
         """
-        Assembles l_obs from each matrix
+        Desc:
+            Assembles l_obs from each matrix
+        Input:
+        Output:
+            self.l_0 constructed
         """
         
         self.l_0 = mat(np.zeros((self.n, 1)))
-        
+                    
         temp = []
         for obs in self.models:
             temp.append(obs.l_0)
         self.l_0 = np.vstack(temp)
         
-        
+    def update_values(self):
+        """
+        Desc:
+            Updates x_0 and design and l_0
+        Input:
+            Uses most recent x_hat value
+        Output:
+            none:
+        """
+        #update models
+        for model in self.models:
+            #model.x_0 = self.x_0
+            
+            model.obs_0()
+            
+            #update design matrix
+            model.set_design()
+           
+        #update within network
+        self.design()
+        self.obs_0()
