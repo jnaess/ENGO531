@@ -38,16 +38,17 @@ class Bundle(LS, File_Reader):
         self.pix_to_m = 3.45e-3
         
         #pixel spacing (mm)
-        self.delta_x = self.delta_y = 3.45e-6*1000
+        self.delta_x = 3.45e-6*1000
+        self.delta_y = 3.45e-6*1000
 
         #normal principal distance (mm) 
         self.n_p_d = 7
 
         #number of pixels for total columns
-        self.Np = 4000
+        self.Np = 3000
 
         #number of rows of pixels
-        self.Mp = 3000
+        self.Mp = 4000
         
         self.set_ue()
         self.set_uo()

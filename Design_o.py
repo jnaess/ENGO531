@@ -21,24 +21,36 @@ class Design_o(Bundle, LS):
         """
         Bundle.__init__(self)
         LS.__init__(self)
+
+        self.initialial_setup()
         
         
         
+    def initialial_setup(self):
+        """
+        Desc:
+            initializes major variables (combining matrices and stuff)        
+        Input:
+        Output:
+           self.u
+        """     
+        self.xp = self.pix_to_m*self.int["xp"][0]
+        self.yp = self.pix_to_m*self.int["yp"][0]
+        self.c = self.pix_to_m*self.int["c"][0]
+            
         #from LS class to find unknown columns
         self.set_col_list_ao()
+        self.set_col_list_ae()
         
         self.set_X_0()
         
         self.set_obs()
         
-        self.Ae = ae()
+        self.obs_0()
         
         self.set_design()
+
         
-        
-        
-        self.obs_0()
-                
     def set_obs(self):
         """
         Desc:
@@ -56,6 +68,8 @@ class Design_o(Bundle, LS):
         #data input as ***mm***
         self.errs = mat(np.zeros((self.n, 1)))
         
+        
+        
         #get desired numbers in a list
         y = self.pho['y'].to_list()
         x = self.pho['x'].to_list()
@@ -66,20 +80,48 @@ class Design_o(Bundle, LS):
             #set up x_ij and y_ij info
             self.rhc(x[j],y[j])
             
+            #if j == 0:
+                #print("xp: {} | yp: {} | xmm: {} | ymm: {}".format(x[j], y[j], self.x_ij, self.y_ij))
             #x pixel
             self.obs[i,0] = self.x_ij
             
             #y pixel
             self.obs[i+1,0] = self.y_ij
             
+            self.errs[i,0] = .00345
+            self.errs[i+1,0] = .00345
+                
             #assign errors
+            j = j+1
+        self.set_control_weights()
+        
+    def set_control_weights(self):
+        """
+        Desc:
+            Sets control weights for datum definition
+        Input:
+        Output:
+            self.errs_o
+        """
+        #for Po
+        self.errs_o = mat(np.zeros((self.uo, 1)))
+        
+        #to skip the Ae ones (only pixel points wanted)
+        check = self.pho['knowns'].to_list()
+        j = self.ue
+        for i in range(0,self.uo,3):
+            
+            #    print(str(i)+"     "+str(self.ue)+"        "+str(self.uo))
             if check[j] == "u":
                 #then tie point and larger std
-                self.errs[i,0] = 10
-                self.errs[i+1,0] = 10
+                self.errs_o[i,0] = 0
+                self.errs_o[i+1,0] = 0
+                self.errs_o[i+2,0] = 0
             else:
-                self.errs[i,0] = .01
-                self.errs[i+1,0] = .01
+                #control points given extra weight
+                self.errs_o[i,0] = .01
+                self.errs_o[i+1,0] = .01
+                self.errs_o[i+2,0] = .01
             
             #increment index in y and x lsits
             j = j+1
@@ -111,6 +153,8 @@ class Design_o(Bundle, LS):
             x_0_ao.append(row["Y"])
             x_0_ao.append(row["Z"])
             
+        LS.x_0_ao = t(mat(x_0_ao))
+        
         self.x_0 = t(mat(x_0_ae+x_0_ao))
         LS.x_0 = self.x_0
         
@@ -124,9 +168,10 @@ class Design_o(Bundle, LS):
             self.x_0
         output:
             self.l_0
-        """
-        self.xp = self.pix_to_m*self.int["xp"][0]
-        self.yp = self.pix_to_m*self.int["yp"][0]
+        """    
+        self.rhc(self.int["xp"][0], self.int["yp"][0])
+        self.xp = self.x_ij
+        self.yp = self.y_ij
         self.c = self.pix_to_m*self.int["c"][0]
         
         #set it up as just zeros
@@ -136,7 +181,7 @@ class Design_o(Bundle, LS):
             obs = self.pho.iloc[int(i/2)]
             
             #row for ae parameters
-            j = self.Ae.find_col_ae(obs["image_id"])
+            j = self.find_col_ae(obs["image_id"])
             #row for ue parameters
             j_2 = self.ue + self.find_col_ao(obs["point_id"])
             
@@ -146,28 +191,30 @@ class Design_o(Bundle, LS):
             self.w = LS.x_0[j+3]
             self.o = LS.x_0[j+4]
             self.k = LS.x_0[j+5]
-
+            
             #xp, yp, c values should be updated here if multiple cameras were used
             
             self.X_i = LS.x_0[j_2]
             self.Y_i = LS.x_0[j_2+1]
             self.Z_i = LS.x_0[j_2+2]
-
+            #if i == 0:
+                #print("xp: {} | yp: {} | c: {} | X_cj: {} | Y_cj: {} | Z_cj: {} | w: {} | o: {} | k: {} | X_i: {} | Y_i: {} | Z_i: {}".format(self.xp, self.yp, self.c, self.X_cj, self.Y_cj, self.Z_cj, self.w, self.o, self.k, self.X_i,self.Y_i,self.Z_i))
             v = self.V()
             w = self.W()
             u = self.U()
             m_temp = self.M()
             
+            #if i == 0:
+                #print("xp: {} | yp: {} | c: {} | u: {} | w: {} | v: {}".format(self.xp, self.yp, self.c, u,w,v))
             x = self.xp - self.c*u/w
             y = self.yp - self.c*v/w
-            self.rhc(x,y)
             
             #setup xij
-            self.l_0[i,0] = self.x_ij
+            self.l_0[i,0] = x
             
             #set up yij
-            self.l_0[i+1,0] = self.y_ij
-        
+            self.l_0[i+1,0] = y
+                
     def set_design(self):
         """
         Desc:
@@ -175,10 +222,13 @@ class Design_o(Bundle, LS):
         Output:
         Input:
         """
+        self.xp = self.pix_to_m*self.int["xp"][0]
+        self.yp = self.pix_to_m*self.int["yp"][0]
+        self.c = self.pix_to_m*self.int["c"][0]
         self.update_Ae()
         
         #set it up as just zeros
-        self.A = mat(np.zeros((self.n, self.uo)))
+        self.Ao = mat(np.zeros((self.n, self.uo)))
         
         #0, 2, 4, etc. are X pixels
         #1, 3, 5, etc. are Y pixels
@@ -196,36 +246,38 @@ class Design_o(Bundle, LS):
             #j = int(obs["image_id"])
             j = self.find_col_ao(obs["point_id"])
             
-            j_2 = self.Ae.find_col_ae(obs["image_id"])            
+            j_2 = self.find_col_ae(obs["image_id"])            
 
             #then evens (X partial)
-            self.A[i,j] = -self.Ae.A[i,j_2]
+            self.Ao[i,j] = -self.Ae[i,j_2]
                 #Y
-            self.A[i,j + 1] = -self.Ae.A[i,j_2+1]
+            self.Ao[i,j + 1] = -self.Ae[i,j_2+1]
                 #Z
-            self.A[i,j + 2] = -self.Ae.A[i,j_2+2]
+            self.Ao[i,j + 2] = -self.Ae[i,j_2+2]
             
             #then odds (Y partial)
                 #X
-            self.A[i+1,j] = -self.Ae.A[i+1,j_2]
+            self.Ao[i+1,j] = -self.Ae[i+1,j_2]
                 #Y
-            self.A[i+1,j + 1] = -self.Ae.A[i+1,j_2+1]
+            self.Ao[i+1,j + 1] = -self.Ae[i+1,j_2+1]
                 #Z
-            self.A[i+1,j + 2] = -self.Ae.A[i+1,j_2+2]
+            self.Ao[i+1,j + 2] = -self.Ae[i+1,j_2+2]
             
     def update_Ae(self):
         """
         Desc:
             Initializes the design matrix
-        Output:
         Input:
+            LS.x_0
+        Output:
+        
         """    
         self.xp = self.pix_to_m*self.int["xp"][0]
         self.yp = self.pix_to_m*self.int["yp"][0]
         self.c = self.pix_to_m*self.int["c"][0]
         
         #set it up as just zeros
-        self.Ae.A = mat(np.zeros((self.n, self.ue)))
+        self.Ae = mat(np.zeros((self.n, self.ue)))
         
         #0, 2, 4, etc. are X pixels
         #1, 3, 5, etc. are Y pixels
@@ -234,7 +286,7 @@ class Design_o(Bundle, LS):
             obs = self.pho.iloc[int(i/2)]
             
             #row for ae parameters
-            j = self.Ae.find_col_ae(obs["image_id"])
+            j = self.find_col_ae(obs["image_id"])
             #row for ue parameters
             j_2 = self.ue + self.find_col_ao(obs["point_id"])
             
@@ -259,34 +311,34 @@ class Design_o(Bundle, LS):
 
                 #then evens (X partial)
                 #X
-            self.Ae.A[i,j] = -(self.c/w**2)*(m_temp[2,0]*u-m_temp[0,0]*w)
+            self.Ae[i,j] = -(self.c/w**2)*(m_temp[2,0]*u-m_temp[0,0]*w)
                 #Y
-            self.Ae.A[i,j + 1] = -self.c/w**2*(m_temp[2,1]*u-m_temp[0,1]*w)
+            self.Ae[i,j + 1] = -self.c/w**2*(m_temp[2,1]*u-m_temp[0,1]*w)
                 #Z
-            self.Ae.A[i,j + 2] = -self.c/w**2*(m_temp[2,2]*u-m_temp[0,2]*w)
+            self.Ae[i,j + 2] = -self.c/w**2*(m_temp[2,2]*u-m_temp[0,2]*w)
                 #w
-            self.Ae.A[i,j + 3] = -self.c/w**2*((self.Y_i - self.Y_cj)*(u*m_temp[2,2]-w*m_temp[0,2])
+            self.Ae[i,j + 3] = -self.c/w**2*((self.Y_i - self.Y_cj)*(u*m_temp[2,2]-w*m_temp[0,2])
                                                        -(self.Z_i - self.Z_cj)*(u*m_temp[2,1]-w*m_temp[0,1]))
                 #o
-            self.Ae.A[i,j + 4] = self.c/w**2*((self.X_i - self.X_cj)*(-w*m.sin(self.o)*m.cos(self.k)-u*m.cos(self.o))
-                                                      +(self.Y_i - self.Y_cj)*(w*m.sin(self.w)*m.cos(self.o)*m.cos(self.k)-u*m.sin(self.w)*m.sin(self.o))
-                                                      +(self.Z_i - self.Z_cj)*(-w*m.cos(self.w)*m.cos(self.o)*m.cos(self.k)+u*m.cos(self.w)*m.sin(self.o)))
+            self.Ae[i,j + 4] = -self.c/w**2*((self.X_i - self.X_cj)*(-w*m.sin(self.o)*m.cos(self.k)-u*m.cos(self.o))
+                                                +(self.Y_i - self.Y_cj)*(w*m.sin(self.w)*m.cos(self.o)*m.cos(self.k)-u*m.sin(self.w)*m.sin(self.o))
+                                                +(self.Z_i - self.Z_cj)*(-w*m.cos(self.w)*m.cos(self.o)*m.cos(self.k)+u*m.cos(self.w)*m.sin(self.o)))
                 #k
-            self.Ae.A[i,j + 5] = -self.c*v/w
+            self.Ae[i,j + 5] = -self.c*v/w
             
                 #then odds (Y partial)
                 #X
-            self.Ae.A[i+1,j] = -self.c/w**2*(m_temp[2,0]*v-m_temp[1,0]*w)
+            self.Ae[i+1,j] = -self.c/w**2*(m_temp[2,0]*v-m_temp[1,0]*w)
                 #Y
-            self.Ae.A[i+1,j + 1] = -self.c/w**2*(m_temp[2,1]*v-m_temp[1,1]*w)
+            self.Ae[i+1,j + 1] = -self.c/w**2*(m_temp[2,1]*v-m_temp[1,1]*w)
                 #Z
-            self.Ae.A[i+1,j + 2] = -self.c/w**2*(m_temp[2,2]*v-m_temp[0,2]*w)
+            self.Ae[i+1,j + 2] = -self.c/w**2*(m_temp[2,2]*v-m_temp[1,2]*w)
                 #w
-            self.Ae.A[i+1,j + 3] = -self.c/w**2*((self.Y_i - self.Y_cj)*(v*m_temp[2,2]-w*m_temp[1,2])
+            self.Ae[i+1,j + 3] = -self.c/w**2*((self.Y_i - self.Y_cj)*(v*m_temp[2,2]-w*m_temp[1,2])
                                                         -(self.Z_i - self.Z_cj)*(v*m_temp[2,1]-w*m_temp[1,1]))
                 #o
-            self.Ae.A[i+1,j + 4] = self.c/w**2*((self.X_i - self.X_cj)*(w*m.sin(self.o)*m.sin(self.k)-v*m.cos(self.o))
-                                                      +(self.Y_i - self.Y_cj)*(-w*m.sin(self.w)*m.cos(self.o)*m.sin(self.k)-v*m.sin(self.w)*m.sin(self.o))
-                                                      +(self.Z_i - self.Z_cj)*(w*m.cos(self.w)*m.cos(self.o)*m.sin(self.k)+v*m.cos(self.w)*m.sin(self.o)))
+            self.Ae[i+1,j + 4] = -self.c/w**2*((self.X_i - self.X_cj)*(w*m.sin(self.o)*m.sin(self.k)-v*m.cos(self.o))
+                                                +(self.Y_i - self.Y_cj)*(-w*m.sin(self.w)*m.cos(self.o)*m.sin(self.k)-v*m.sin(self.w)*m.sin(self.o))
+                                                +(self.Z_i - self.Z_cj)*(w*m.cos(self.w)*m.cos(self.o)*m.sin(self.k)+v*m.cos(self.w)*m.sin(self.o)))
                 #k
-            self.Ae.A[i+1,j + 5] = -self.c*u/w
+            self.Ae[i+1,j + 5] = self.c*u/w
