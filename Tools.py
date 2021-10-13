@@ -53,3 +53,21 @@ class Tools():
         plt.close()
         plt.cla()
         plt.clf()
+        
+    def save_df(self, df, title):
+        """
+        Desc:
+            saves df to the file
+        Input:
+        Output:
+        """
+        #folder is just called files
+        folder_path = 'Files/'
+        file_name = title
+
+        #makes folder if not already there
+        if not os.path.isdir(folder_path):
+            os.makedirs(folder_path)
+
+        #saves to the folder using the title name
+        df.to_csv(os.path.join(folder_path,file_name))

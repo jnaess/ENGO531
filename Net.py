@@ -13,6 +13,7 @@ from PostAdjustmentTester import PostAdjustmentTester
 
 
 
+
 class Network(LS, PostAdjustmentTester):
     """
     Build to run the least squares adjustment and set up the overall network
@@ -346,6 +347,20 @@ class Network(LS, PostAdjustmentTester):
            self.S
         """
         self.A = np.concatenate((self.Ae,self.Ao), axis = 1)
+        self.u_list = []
+        for i in self.models[0].u_list_ae:
+            self.u_list.append("{}Xcj".format(i))
+            self.u_list.append("{}Ycj".format(i))
+            self.u_list.append("{}Zcj".format(i))
+            self.u_list.append("{}w".format(i))
+            self.u_list.append("{}o".format(i))
+            self.u_list.append("{}k".format(i))
+            
+        for i in self.models[0].u_list_ao:
+            self.u_list.append("{}Xi".format(i))
+            self.u_list.append("{}Yi".format(i))
+            self.u_list.append("{}Zi".format(i))
+
         
     def design(self):
         """
@@ -363,7 +378,8 @@ class Network(LS, PostAdjustmentTester):
         #self.A = np.vstack(temp)
         self.Ae = self.models[0].Ae
         self.Ao = self.models[0].Ao
-        
+    
+    
     def set_N(self):
         """
         Desc:

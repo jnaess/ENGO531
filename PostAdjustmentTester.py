@@ -87,7 +87,6 @@ class PostAdjustmentTester(Tables):
         xs = []
         
         #unknown names in string format
-        self.u_list
         us = []
         
         #list to store their signifiance as Signifiance or Not Significant
@@ -113,7 +112,7 @@ class PostAdjustmentTester(Tables):
         
         
         for i in range(0,self.u):
-            std.append(m.sqrt(self.Cx[0,0]))
+            std.append(m.sqrt(self.Cx[i,i]))
             
             y.append((self.x_hat[i]/std[i])[0,0])
             
@@ -130,8 +129,8 @@ class PostAdjustmentTester(Tables):
             bounds.append(str([low, high]))
         #to store values in a dictionary before conversion to dataframe
         dict_list = {
-                "Unknown": xs,
-                "Final Value": us,
+                "Unknown": us,
+                "Final Value": xs,
                 "Value Standard Deviation": std,
                 "Test Value": y,
                 "Indicated Significance": sig,
@@ -252,6 +251,83 @@ class PostAdjustmentTester(Tables):
         }
         return pd.DataFrame.from_dict(dic)
                 
+        
+    def final_file(self, alpha = .05):
+        """
+        Desc:
+            Final Dataframe File
+        Input:
+            alpha: to generate the two confidence intervals. Be sure to make sure that these values are generated in the respective dataframe of values, otherwise they won't be found :-)
+            self.n: # of observations
+            self.x_hat
+            self.u_list: for labelling
+            self.Cx: for extracting std dev values of parameters
+        Output:
+            retrunds dataframe of values [Unknown 	Final Value 	Value Standard Deviation 	Test Value 	Indicated Significance 	Alpha Tested 	Confidence Level 	Test Bounds]
+        """
+        #set up DOF (r)
+        self.r = self.n - self.u
+        
+        high = stu.ppf(1.0 - alpha, self.r)
+        low = stu.ppf(alpha, self.r)
+        
+        #final paramter values
+        xs = []
+        
+        #unknown names in string format
+        us = []
+        
+        #list to store their signifiance as Signifiance or Not Significant
+        sig = []
+        
+        #list to store the value that was checked
+        sig_value = []
+        
+        #list of standard deviation values
+        std = []
+        
+        #test values
+        y = []
+        
+        #confidence levels
+        conf = []
+        
+        #confidence levels
+        alphs = []
+        
+        #test bounds
+        bounds = []
+        
+        
+        for i in range(0,self.u):
+            std.append(m.sqrt(self.Cx[i,i]))
+            
+            y.append((self.x_hat[i]/std[i])[0,0])
+            
+            if y[i] > low and y[i] < high:
+                #if fails then there IS statistical significance
+                sig.append("No")
+            else:
+                sig.append("Yes")
+                
+            xs.append(self.x_hat[i][0,0])
+            us.append(self.u_list[i])
+            conf.append((1-alpha)*100)
+            alphs.append(alpha)
+            bounds.append(str([low, high]))
+        #to store values in a dictionary before conversion to dataframe
+        dict_list = {
+                "Unknown": us,
+                "Final Value (mm or rad)": xs,
+                "Value Standard Deviation (mm or rad)": std,
+                #"Test Value": y,
+                #"Indicated Significance": sig,
+                #"Alpha Tested": alphs,
+                #"Confidence Level": conf,
+                #"Test Bounds": bounds
+            }
+        #return dict_list
+        return pd.DataFrame.from_dict(dict_list)
             
         
             
