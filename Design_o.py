@@ -100,11 +100,51 @@ class Design_o(Bundle, LS):
         Desc:
             Sets control weights for datum definition
         Input:
+            self.uo
+            self.pho
+        
         Output:
             self.errs_o
         """
         #for Po
         self.errs_o = mat(np.zeros((self.uo, 1)))
+        
+        #to skip the Ae ones (only pixel points wanted)
+        check = self.pho['knowns'].to_list()
+        j = self.ue
+        for i in range(0,self.uo,3):
+            
+            #    print(str(i)+"     "+str(self.ue)+"        "+str(self.uo))
+            if check[j] == "u":
+                #then tie point and larger std
+                self.errs_o[i,0] = 0
+                self.errs_o[i+1,0] = 0
+                self.errs_o[i+2,0] = 0
+            else:
+                #control points given extra weight
+                self.errs_o[i,0] = .01
+                self.errs_o[i+1,0] = .01
+                self.errs_o[i+2,0] = .01
+            
+            #increment index in y and x lsits
+            j = j+1
+            
+    def set_EOP_weights(self):
+        """
+        Status:
+            ***currently figuring out which EOP to assign weights to***
+            
+        Desc:
+            Sets control EOP for datum definition
+            
+        Input:
+            self.ue
+            self.pho
+        Output:
+            self.errs_e
+        """
+        #for Po
+        self.errs_e = mat(np.zeros((self.ue, 1)))
         
         #to skip the Ae ones (only pixel points wanted)
         check = self.pho['knowns'].to_list()
