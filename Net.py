@@ -11,9 +11,6 @@ from Level import Delta
 from PostAdjustmentTester import PostAdjustmentTester
 
 
-
-
-
 class Network(LS, PostAdjustmentTester):
     """
     Build to run the least squares adjustment and set up the overall network
@@ -40,13 +37,13 @@ class Network(LS, PostAdjustmentTester):
             self.initialize_variables()
 
             #_________________begin LSA______________________
-            self.photo_LSA()
+            #self.photo_LSA()
 
             #_________________format matrices for outputting statistics______________________
-            self.photo_mats()
+            #self.photo_mats()
         
         #_________________output statistics______________________
-        self.final_matrices()
+        #self.final_matrices()
         
     def initialize_variables(self):
         """
@@ -79,6 +76,12 @@ class Network(LS, PostAdjustmentTester):
             for obs in self.models:
                 temp.append(obs.errs_o)
             self.errs_o = np.vstack(temp)
+            
+            #set up control weight errors matrix
+            temp = []
+            for obs in self.models:
+                temp.append(obs.errs_e)
+            self.errs_e = np.vstack(temp)
         
         #set up number of observations variable
         self.n = len(self.errs)
@@ -102,6 +105,13 @@ class Network(LS, PostAdjustmentTester):
             for i in range(0,self.uo):
                 if self.errs_o[i] != 0:
                     self.Po[i,i] = 1/self.errs_o[i]**2
+                    
+            #then a Po will also need to be made
+            self.Pe = mat(np.zeros((self.ue, self.ue)))
+        
+            for i in range(0,self.ue):
+                if self.errs_e[i] != 0:
+                    self.Pe[i,i] = 1/self.errs_e[i]**2
         
                 
     def final_matrices(self):
@@ -134,6 +144,9 @@ class Network(LS, PostAdjustmentTester):
         
         self.Cr = self.a_post**2*inv(self.P)-self.Cl
         #self.plot_mat(self.Cr, "Covariance Matrix of Residuals")
+        
+        if self.net_type == "Photo":
+            pass
         
     def nonlinear_LSA(self):
         """
@@ -394,7 +407,7 @@ class Network(LS, PostAdjustmentTester):
             self.Noo
             self.N
         """
-        self.Nee = mm(t(self.Ae),mm(self.P,self.Ae))
+        self.Nee = mm(t(self.Ae),mm(self.P,self.Ae))+self.Pe
         self.Neo = mm(t(self.Ae),mm(self.P,self.Ao))
         self.Noo = mm(t(self.Ao),mm(self.P,self.Ao))+self.Po
         
@@ -418,9 +431,10 @@ class Network(LS, PostAdjustmentTester):
             self.U
         """
         #self
+        self.w_0_e = LS.x_0_ae - self.x_0[0:self.ue,0]
         self.w_0_o = LS.x_0_ao - self.x_0[self.ue:,0]
         
-        self.Ue = mm(t(self.Ae),mm(self.P,self.w_0))
+        self.Ue = mm(t(self.Ae),mm(self.P,self.w_0))+mm(self.Pe,self.w_0_e)
         self.Uo = mm(t(self.Ao),mm(self.P,self.w_0))+mm(self.Po,self.w_0_o)
         #print(self.Uo.shape)
         self.U = np.concatenate((self.Ue,self.Uo), axis = 0)

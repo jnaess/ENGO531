@@ -94,6 +94,7 @@ class Design_o(Bundle, LS):
             #assign errors
             j = j+1
         self.set_control_weights()
+        self.set_EOP_weights()
         
     def set_control_weights(self):
         """
@@ -132,7 +133,7 @@ class Design_o(Bundle, LS):
     def set_EOP_weights(self):
         """
         Status:
-            ***currently figuring out which EOP to assign weights to***
+            ***need to test is distance and angle weights assigned to current indices***
             
         Desc:
             Sets control EOP for datum definition
@@ -143,28 +144,16 @@ class Design_o(Bundle, LS):
         Output:
             self.errs_e
         """
-        #for Po
+        #for Pe
         self.errs_e = mat(np.zeros((self.ue, 1)))
         
-        #to skip the Ae ones (only pixel points wanted)
-        check = self.pho['knowns'].to_list()
-        j = self.ue
-        for i in range(0,self.uo,3):
-            
-            #    print(str(i)+"     "+str(self.ue)+"        "+str(self.uo))
-            if check[j] == "u":
-                #then tie point and larger std
-                self.errs_o[i,0] = 0
-                self.errs_o[i+1,0] = 0
-                self.errs_o[i+2,0] = 0
-            else:
-                #control points given extra weight
-                self.errs_o[i,0] = .01
-                self.errs_o[i+1,0] = .01
-                self.errs_o[i+2,0] = .01
-            
-            #increment index in y and x lsits
-            j = j+1
+        #to skip the Ae ones (only one (so first) picture needed)
+        self.errs_e[0,0] = .01
+        self.errs_e[1,0] = .01
+        self.errs_e[2,0] = .01
+        self.errs_e[3,0] = m.radians(.0001)
+        self.errs_e[4,0] = m.radians(.0001)
+        self.errs_e[5,0] = m.radians(.0001)
             
     def set_X_0(self):
         """
@@ -193,6 +182,7 @@ class Design_o(Bundle, LS):
             x_0_ao.append(row["Y"])
             x_0_ao.append(row["Z"])
             
+        LS.x_0_ae = t(mat(x_0_ae))    
         LS.x_0_ao = t(mat(x_0_ao))
         
         self.x_0 = t(mat(x_0_ae+x_0_ao))
