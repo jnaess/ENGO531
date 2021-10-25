@@ -108,21 +108,25 @@ class Design_o(Bundle, LS):
             self.errs_o
         """
         #for Po
-        self.errs_o = mat(np.zeros((self.uo, 1)))
+        self.errs_o = mat(np.ones((self.uo, 1)))*.01
         
         #to skip the Ae ones (only pixel points wanted)
-        check = self.pho['knowns'].to_list()
-        j = self.ue
+        check = self.obj['knowns'].to_list()
+        name = self.obj['point_id'].to_list()
+        
+        j = 0
         for i in range(0,self.uo,3):
             
             #    print(str(i)+"     "+str(self.ue)+"        "+str(self.uo))
             if check[j] == "u":
                 #then tie point and larger std
+                #print("point: [{}], index: [{}], value: [{}]".format(name[j], j, check[j]))
                 self.errs_o[i,0] = 0
                 self.errs_o[i+1,0] = 0
                 self.errs_o[i+2,0] = 0
             else:
                 #control points given extra weight
+                #print("point: [{}], index: [{}], value: [{}]".format(name[j], j, check[j]))
                 self.errs_o[i,0] = .01
                 self.errs_o[i+1,0] = .01
                 self.errs_o[i+2,0] = .01
@@ -191,7 +195,7 @@ class Design_o(Bundle, LS):
     def obs_0(self):
         """
         desc:
-            Sets up self.l_0 (extimated observations)
+            Sets up self.l_0 (estimated observations)
             Used for finding the current misclosure
             Assumes only one camera for IOP's from self.int
         input:

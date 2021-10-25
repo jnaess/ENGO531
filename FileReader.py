@@ -57,7 +57,10 @@ class File_Reader():
         #convert ID's to strings
         df[["point_id"]] = df[["point_id"]].astype(str)
         
-        #std for tie points is 1 pixel
+        temp = []
+        for index, row in df.iterrows():
+            temp.append('u')
+        df["knowns"] = temp
         
         return df
     
@@ -83,6 +86,11 @@ class File_Reader():
         
         #convert ID's to strings
         df[["point_id"]] = df[["point_id"]].astype(str)
+        
+        temp = []
+        for index, row in df.iterrows():
+            temp.append('n')
+        df["knowns"] = temp
         
         return df
 
@@ -171,7 +179,9 @@ class File_Reader():
         df[["image_id"]] = df[["image_id"]].astype(str)
         
         #sort values in ascending inage_id's
-        df = df.sort_values(by=['image_id'])
+        #df = df.sort_values(by=['point_id'], ascending = False)
+        #df = df.sort_values(by=['image_id', 'point_id'])
+        df = df.sort_values(by='image_id')
         
         #std for control points is .01mm and temporarily 10mm for tie
         temp = []
@@ -189,7 +199,7 @@ class File_Reader():
         """
         Desc:
             Initializes the object point dataframe
-            ***may bee differentiating between tie points and control points***
+            ***may be differentiating between tie points and control points***
         Input:
             self.tie
             self.con

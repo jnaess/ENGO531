@@ -37,13 +37,13 @@ class Network(LS, PostAdjustmentTester):
             self.initialize_variables()
 
             #_________________begin LSA______________________
-            #self.photo_LSA()
+            self.photo_LSA()
 
             #_________________format matrices for outputting statistics______________________
-            #self.photo_mats()
+            self.photo_mats()
         
         #_________________output statistics______________________
-        #self.final_matrices()
+        self.final_matrices()
         
     def initialize_variables(self):
         """
@@ -327,7 +327,7 @@ class Network(LS, PostAdjustmentTester):
         
         not_under = False
         for key in self.S_hat:
-            if abs(key[0,0]) > .0001:
+            if abs(key[0,0]) > .001:
                 #this means the criterea was not met for atleast one of the unknowns
                 not_under = True
 
@@ -407,7 +407,7 @@ class Network(LS, PostAdjustmentTester):
             self.Noo
             self.N
         """
-        self.Nee = mm(t(self.Ae),mm(self.P,self.Ae))+self.Pe
+        self.Nee = mm(t(self.Ae),mm(self.P,self.Ae))#+self.Pe
         self.Neo = mm(t(self.Ae),mm(self.P,self.Ao))
         self.Noo = mm(t(self.Ao),mm(self.P,self.Ao))+self.Po
         
@@ -434,7 +434,7 @@ class Network(LS, PostAdjustmentTester):
         self.w_0_e = LS.x_0_ae - self.x_0[0:self.ue,0]
         self.w_0_o = LS.x_0_ao - self.x_0[self.ue:,0]
         
-        self.Ue = mm(t(self.Ae),mm(self.P,self.w_0))+mm(self.Pe,self.w_0_e)
+        self.Ue = mm(t(self.Ae),mm(self.P,self.w_0))#+mm(self.Pe,self.w_0_e)
         self.Uo = mm(t(self.Ao),mm(self.P,self.w_0))+mm(self.Po,self.w_0_o)
         #print(self.Uo.shape)
         self.U = np.concatenate((self.Ue,self.Uo), axis = 0)
